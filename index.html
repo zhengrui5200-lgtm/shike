@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>食刻 · 饮食打卡</title>
+<meta name="theme-color" content="#F7F3EC">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="食刻">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#F7F3EC;--card:#FFFFFF;--ink:#24211C;--sub:#7C766C;--line:#ECE6DC;
+  --green:#2F7D5B;--green-l:#E3F1EA;--orange:#E07A2E;--orange-l:#FBE9DA;
+  --p:#5B8DEF;--c:#E9B13B;--f:#E0675A;--r:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,textarea,select{font:inherit;color:inherit}
+#app{max-width:480px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 8px) 16px calc(96px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;padding:6px 2px 10px}
+.brand{font-size:20px;font-weight:800;letter-spacing:.5px}
+.brand span{color:var(--green)}
+.pill{font-size:12px;color:var(--sub);background:#fff;border:1px solid var(--line);padding:3px 10px;border-radius:99px}
+.pill.warn{color:var(--orange);border-color:var(--orange-l)}
+.card{background:var(--card);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:0 1px 2px rgba(60,40,10,.04)}
+.datebar{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px}
+.datebar button{width:36px;height:36px;border-radius:50%;font-size:22px;line-height:1;color:var(--sub)}
+.datebar button:disabled{opacity:.25}
+.datebar .dl{width:auto;border-radius:99px;font-size:15px;font-weight:600;color:var(--ink);padding:0 14px;background:#fff}
+.hero{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:center}
+.ring{position:relative;width:150px;height:150px}
+.ring svg{width:100%;height:100%}
+.ring circle{fill:none;stroke-width:13;stroke-linecap:round}
+.ring .trk{stroke:var(--green-l)}
+.ring .bar{stroke:var(--green);transition:stroke-dashoffset .6s ease}
+.ring .bar.over{stroke:var(--orange)}
+.ringtxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ringtxt b{font-size:32px;line-height:1.1;font-variant-numeric:tabular-nums}
+.ringtxt small{color:var(--sub);font-size:12px}
+.ringtxt.over b{color:var(--orange)}
+.hs{display:flex;gap:18px;margin-bottom:12px}
+.hs span{display:block;font-size:12px;color:var(--sub)}
+.hs b{font-size:20px;font-variant-numeric:tabular-nums}
+.mac{margin-bottom:8px}
+.mh{display:flex;justify-content:space-between;font-size:12px;color:var(--sub)}
+.mbar{height:6px;background:#F1ECE4;border-radius:9px;overflow:hidden;margin-top:3px}
+.mbar i{display:block;height:100%;border-radius:9px}
+.mbar .p{background:var(--p)}.mbar .c{background:var(--c)}.mbar .f{background:var(--f)}
+.check{display:flex;align-items:center;gap:12px}
+.check .ico{width:44px;height:44px;border-radius:14px;background:var(--orange-l);display:grid;place-items:center;font-size:22px;flex:none}
+.check.done .ico{background:var(--green-l)}
+.check .tx{flex:1;min-width:0}
+.check .tx b{display:block}
+.check .tx small{color:var(--sub)}
+.btn{background:var(--green);color:#fff;border-radius:12px;padding:10px 16px;font-weight:600;white-space:nowrap}
+.btn.o{background:var(--orange)}
+.btn.ghost{background:#F3EEE6;color:var(--ink)}
+.btn.block{display:block;width:100%;padding:13px;font-size:16px}
+.btn:disabled{opacity:.5}
+.link{color:var(--sub);font-size:13px;text-decoration:underline}
+.meal-h{display:flex;align-items:center;gap:8px}
+.meal-h b{font-size:16px}
+.meal-h .k{color:var(--sub);font-size:13px;margin-left:auto;font-variant-numeric:tabular-nums}
+.add{width:30px;height:30px;border-radius:50%;background:var(--green-l);color:var(--green);font-size:20px;line-height:1;font-weight:600}
+.items{margin-top:8px}
+.it{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.it:first-child{border-top:0}
+.th{width:40px;height:40px;border-radius:10px;object-fit:cover;background:#F3EEE6;display:grid;place-items:center;font-size:18px;flex:none}
+.it .nm{flex:1;min-width:0}
+.it .nm b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it .nm small{color:var(--sub);font-size:12px}
+.it .kc{font-variant-numeric:tabular-nums;font-weight:600}
+.del{color:#BDB5A8;font-size:20px;width:28px}
+.empty{color:#B0A898;font-size:13px;padding:4px 0 0}
+nav{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav .in{max-width:480px;margin:0 auto;display:flex;align-items:flex-end;justify-content:space-around;height:62px}
+nav button{display:flex;flex-direction:column;align-items:center;font-size:11px;color:var(--sub);padding:6px 10px;gap:1px}
+nav button .e{font-size:21px;filter:grayscale(1);opacity:.6}
+nav button.on{color:var(--green);font-weight:600}
+nav button.on .e{filter:none;opacity:1}
+nav .cam{width:60px;height:60px;border-radius:50%;background:var(--green);color:#fff;font-size:26px;justify-content:center;transform:translateY(-14px);box-shadow:0 6px 16px rgba(47,125,91,.35);padding:0}
+.sec-t{font-size:13px;color:var(--sub);margin:16px 4px 8px;font-weight:600}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats3 b{display:block;font-size:24px;font-variant-numeric:tabular-nums}
+.stats3 b.g{color:var(--green)}
+.stats3 span{font-size:12px;color:var(--sub)}
+.calh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.calh button{font-size:20px;width:32px;color:var(--sub)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal .wd{font-size:11px;color:var(--sub);padding-bottom:2px}
+.cal .d{aspect-ratio:1/1.05;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;background:#FAF7F2;position:relative}
+.cal .d small{font-size:9px;color:var(--sub);line-height:1}
+.cal .d.chk{background:var(--green);color:#fff}
+.cal .d.chk small{color:rgba(255,255,255,.85)}
+.cal .d.over.chk{background:var(--orange)}
+.cal .d.has:not(.chk){background:var(--green-l)}
+.cal .d.today{outline:2px solid var(--ink);outline-offset:-2px}
+.cal .d.fut{opacity:.35}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--sub);margin-top:10px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+svg text{font-family:inherit}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row span{color:var(--sub)}
+.note{font-size:12px;color:var(--sub);line-height:1.6}
+.note a{color:var(--green)}
+#sync{cursor:pointer}
+/* sheet */
+#sw{position:fixed;inset:0;z-index:20;display:none}
+#sw.open{display:block}
+#sw .bd{position:absolute;inset:0;background:rgba(30,25,15,.4)}
+#sheet{position:absolute;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:#fff;border-radius:22px 22px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto;animation:up .22s ease}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+.sh-h{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.sh-h b{font-size:17px}
+.x{margin-left:auto;font-size:26px;line-height:1;color:var(--sub);width:34px;height:34px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:6px 12px;border-radius:99px;background:#F3EEE6;font-size:13px}
+.chip.on{background:var(--green);color:#fff}
+.seg{display:flex;background:#F3EEE6;border-radius:12px;padding:3px;margin:12px 0}
+.seg button{flex:1;padding:8px 4px;border-radius:9px;font-size:13px;color:var(--sub)}
+.seg button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.big2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bigbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:110px;border-radius:16px;background:var(--green);color:#fff;font-weight:600;cursor:pointer}
+.bigbtn.alt{background:var(--green-l);color:var(--green)}
+.bigbtn .e{font-size:30px}
+.bigbtn input{display:none}
+.fld{display:block;margin-bottom:10px}
+.fld span{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+.fld input,.fld textarea,.fld select,.inp{width:100%;border:1px solid var(--line);background:#FBF9F5;border-radius:12px;padding:10px 12px;outline:none}
+.fld input:focus,.fld textarea:focus,.inp:focus{border-color:var(--green);background:#fff}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.loading{text-align:center;padding:20px 0}
+.loading img{width:100%;max-height:240px;object-fit:cover;border-radius:14px;margin-bottom:14px}
+.spin{width:30px;height:30px;border:3px solid var(--green-l);border-top-color:var(--green);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ai-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
+.ai-top img{width:84px;height:84px;object-fit:cover;border-radius:12px;flex:none}
+.ai-note{background:var(--green-l);color:#24533F;border-radius:12px;padding:10px 12px;font-size:13px;flex:1}
+.ar{display:grid;grid-template-columns:22px 1fr 72px 74px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.ar input[type=checkbox]{width:18px;height:18px;accent-color:var(--green)}
+.ar .inp{padding:7px 9px;border-radius:10px}
+.ar .g{position:relative}
+.ar .g .inp{padding-right:22px}
+.ar .g i{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;color:var(--sub)}
+.ar .kc{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.ar .kc small{display:block;font-weight:400;font-size:10px;color:var(--sub);line-height:1.3}
+.ar.off{opacity:.45}
+.tot{display:flex;justify-content:space-between;align-items:center;margin:12px 0;font-weight:600}
+.tot b{font-size:20px;color:var(--green)}
+#toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:rgba(36,33,28,.92);color:#fff;padding:9px 16px;border-radius:99px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:30;max-width:86vw;text-align:center}
+#toast.show{opacity:1}
+.stamp{animation:pop .5s ease}
+@keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><div class="brand">食<span>刻</span></div><button id="sync" class="pill" data-act="aiSet"></button></header>
+  <main id="view"></main>
+</div>
+<nav><div class="in">
+  <button data-tab="today"><span class="e">🍽️</span>今日</button>
+  <button data-tab="stats"><span class="e">📅</span>打卡</button>
+  <button class="cam" data-act="quickPhoto" aria-label="拍照记录">📷</button>
+  <button data-tab="trend"><span class="e">📈</span>趋势</button>
+  <button data-tab="me"><span class="e">👤</span>我的</button>
+</div></nav>
+<div id="sw"><div class="bd" data-act="close"></div><div id="sheet"></div></div>
+<div id="toast"></div>
+
+<script>
+const MEALS=[['breakfast','早餐','🌅'],['lunch','午餐','☀️'],['dinner','晚餐','🌙'],['snack','加餐','🍎']];
+const MEAL_NAME=Object.fromEntries(MEALS.map(m=>[m[0],m[1]]));
+const WD=['日','一','二','三','四','五','六'];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const ds=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const pd=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return ds(d)};
+const TODAY=()=>ds(new Date());
+const nid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const r0=n=>Math.round(+n||0), r1=n=>Math.round((+n||0)*10)/10;
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+const st={tab:'today',date:TODAY(),days:{},settings:{goal:1800},mode:'loading',aiCfg:null,
+  ai:null,addMeal:'lunch',addTab:'photo',calMonth:TODAY().slice(0,7)};
+
+function day(d=st.date){return st.days[d]||{items:[],checkin:false}}
+function totals(d=st.date){const t={kcal:0,p:0,c:0,f:0};for(const it of day(d).items||[]){t.kcal+=+it.kcal||0;t.p+=+it.p||0;t.c+=+it.c||0;t.f+=+it.f||0}return t}
+const goal=()=>+st.settings.goal||1800;
+const macroGoal=()=>{const g=goal();return{p:g*.25/4,c:g*.5/4,f:g*.25/9}};
+function defaultMeal(){const h=new Date().getHours();return h<10?'breakfast':h<14?'lunch':h<17?'snack':h<21?'dinner':'snack'}
+function dateLabel(s){const t=TODAY();const d=pd(s);const w='周'+WD[d.getDay()];
+  if(s===t)return '今天 · '+w; if(s===addDays(t,-1))return '昨天 · '+w; return (d.getMonth()+1)+'月'+d.getDate()+'日 · '+w}
+
+/* ---------- 存储（本机） ---------- */
+const LS='shike-v1',LS_AI='shike-ai';
+function loadLocal(){try{const o=JSON.parse(localStorage.getItem(LS)||'{}');st.days=o.days||{};if(o.settings)st.settings=o.settings}catch(e){}}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({days:st.days,settings:st.settings}))}catch(e){toast('保存失败：存储空间不足，请先导出备份')}}
+const persistDay=()=>saveLocal(), persistSettings=()=>saveLocal();
+function mutDay(d,fn){const cur=clone(day(d));cur.items=cur.items||[];fn(cur);st.days[d]=cur;persistDay(d);render()}
+function loadAI(){try{st.aiCfg=JSON.parse(localStorage.getItem(LS_AI)||'null')}catch(e){}}
+function saveAI(){try{localStorage.setItem(LS_AI,JSON.stringify(st.aiCfg))}catch(e){}}
+const aiReady=()=>!!(st.aiCfg&&st.aiCfg.key&&st.aiCfg.base&&st.aiCfg.model);
+
+const PRESETS={
+  zhipu:{name:'智谱 GLM（免费）',base:'https://open.bigmodel.cn/api/paas/v4',model:'glm-4v-flash',raw:true,url:'https://open.bigmodel.cn/usercenter/apikeys'},
+  qwen:{name:'通义千问',base:'https://dashscope.aliyuncs.com/compatible-mode/v1',model:'qwen-vl-max',url:'https://bailian.console.aliyun.com/'},
+  doubao:{name:'豆包（火山方舟）',base:'https://ark.cn-beijing.volces.com/api/v3',model:'',url:'https://console.volcengine.com/ark'},
+  openai:{name:'OpenAI',base:'https://api.openai.com/v1',model:'gpt-4o-mini',url:'https://platform.openai.com/api-keys'},
+  custom:{name:'其他（OpenAI 兼容）',base:'',model:''}
+};
+
+async function callAI(prompt,imgDataUrl){
+  const c=st.aiCfg;const base=c.base.replace(/\/+$/,'');
+  let content=prompt;
+  if(imgDataUrl){const url=PRESETS[c.preset]&&PRESETS[c.preset].raw?imgDataUrl.split(',')[1]:imgDataUrl;
+    content=[{type:'image_url',image_url:{url}},{type:'text',text:prompt}]}
+  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),60000);
+  let res;
+  try{res=await fetch(base+'/chat/completions',{method:'POST',signal:ctl.signal,
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+c.key},
+    body:JSON.stringify({model:c.model,messages:[{role:'user',content}],temperature:0.2})})}
+  catch(e){throw new Error(e.name==='AbortError'?'请求超时，请检查网络':'无法连接到 AI 服务（网络不通，或该服务不允许网页直接调用）')}
+  finally{clearTimeout(to)}
+  const txt=await res.text();let j=null;try{j=JSON.parse(txt)}catch(e){}
+  if(!res.ok){const m=j&&(j.error&&(j.error.message||j.error.code)||j.message);
+    throw new Error((res.status===401||res.status===403?'API Key 无效或没有权限':'AI 服务返回错误 '+res.status)+(m?'：'+m:''))}
+  const out=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
+  if(!out)throw new Error('AI 没有返回内容');
+  return typeof out==='string'?out:out.map(x=>x.text||'').join('');
+}
+
+function init(){loadLocal();loadAI();st.mode='local';render();
+  if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+}
+
+/* ---------- 视图 ---------- */
+function render(){
+  const s=$('#sync');
+  s.textContent=aiReady()?'✨ AI 已就绪':'⚙️ 设置 AI 识别';s.className='pill '+(aiReady()?'':'warn');
+  $('#view').innerHTML=st.tab==='today'?vToday():st.tab==='stats'?vStats():st.tab==='trend'?vTrend():vMe();
+  document.querySelectorAll('nav [data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===st.tab));
+}
+const macro=(n,v,g,k)=>`<div class="mac"><div class="mh"><span>${n}</span><span>${r0(v)} / ${r0(g)} g</span></div><div class="mbar"><i class="${k}" style="width:${Math.min(100,v/g*100)}%"></i></div></div>`;
+
+function vToday(){
+  const t=totals(),g=goal(),mg=macroGoal(),d=day(),isToday=st.date===TODAY();
+  const pct=Math.min(t.kcal/g,1),over=t.kcal>g,C=2*Math.PI*66;
+  const sk=streak();
+  const check=d.checkin
+    ?`<section class="card check done"><div class="ico stamp">✅</div><div class="tx"><b>${isToday?'今日已打卡':'当天已打卡'}</b><small>${isToday&&sk?`已连续打卡 ${sk} 天，继续保持！`:'记录完成'}${d.weight?` · 体重 ${d.weight} kg`:''}</small></div><button class="link" data-act="uncheck">撤销</button></section>`
+    :`<section class="card check"><div class="ico">📝</div><div class="tx"><b>${isToday?'今日还没打卡':'当天未打卡'}</b><small>${(d.items||[]).length?`已记录 ${(d.items||[]).length} 项，${over?'略超目标':'热量在目标内'}`:'记录完饮食后来打个卡吧'}</small></div><button class="btn o" data-act="checkin">${isToday?'打卡':'补卡'}</button></section>`;
+  return `
+  <div class="datebar"><button data-act="prev" aria-label="前一天">‹</button><button class="dl" data-act="goToday">${dateLabel(st.date)}</button><button data-act="next" ${isToday?'disabled':''} aria-label="后一天">›</button></div>
+  <section class="card hero">
+    <div class="ring"><svg viewBox="0 0 160 160"><circle class="trk" cx="80" cy="80" r="66"/><circle class="bar ${over?'over':''}" cx="80" cy="80" r="66" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct)}" transform="rotate(-90 80 80)"/></svg>
+      <div class="ringtxt ${over?'over':''}"><small>${over?'已超出':'还可以吃'}</small><b>${r0(Math.abs(g-t.kcal))}</b><small>千卡</small></div></div>
+    <div><div class="hs"><div><span>目标</span><b>${g}</b></div><div><span>已摄入</span><b>${r0(t.kcal)}</b></div></div>
+      ${macro('蛋白质',t.p,mg.p,'p')}${macro('碳水',t.c,mg.c,'c')}${macro('脂肪',t.f,mg.f,'f')}</div>
+  </section>
+  ${check}
+  ${MEALS.map(([k,n,e])=>{
+    const its=(d.items||[]).filter(i=>i.meal===k);const sum=its.reduce((a,i)=>a+(+i.kcal||0),0);
+    return `<section class="card"><div class="meal-h"><span>${e}</span><b>${n}</b><span class="k">${its.length?r0(sum)+' 千卡':''}</span><button class="add" data-act="add" data-meal="${k}" aria-label="添加${n}">+</button></div>
+    ${its.length?`<div class="items">${its.map(i=>`<div class="it">${i.thumb?`<img class="th" src="${esc(i.thumb)}" alt="">`:`<div class="th">${i.src==='ai'?'✨':'🥢'}</div>`}
+      <div class="nm"><b>${esc(i.name)}</b><small>${i.grams?r0(i.grams)+'g · ':''}蛋${r1(i.p)} 碳${r1(i.c)} 脂${r1(i.f)}</small></div>
+      <span class="kc">${r0(i.kcal)}</span><button class="del" data-act="del" data-id="${esc(i.id)}" aria-label="删除">×</button></div>`).join('')}</div>`
+      :`<div class="empty">还没有记录</div>`}</section>`}).join('')}`;
+}
+
+function streak(){let d=TODAY();if(!day(d).checkin)d=addDays(d,-1);let n=0;while(st.days[d]&&st.days[d].checkin){n++;d=addDays(d,-1)}return n}
+function bestStreak(){const ks=Object.keys(st.days).filter(k=>st.days[k].checkin).sort();let best=0,cur=0,prev=null;
+  for(const k of ks){cur=(prev&&addDays(prev,1)===k)?cur+1:1;best=Math.max(best,cur);prev=k}return best}
+
+function vStats(){
+  const total=Object.values(st.days).filter(x=>x.checkin).length;
+  const [y,m]=st.calMonth.split('-').map(Number);
+  const first=new Date(y,m-1,1),startW=(first.getDay()+6)%7,n=new Date(y,m,0).getDate(),t=TODAY(),g=goal();
+  let cells=['一','二','三','四','五','六','日'].map(w=>`<div class="wd">${w}</div>`).join('');
+  for(let i=0;i<startW;i++)cells+='<div></div>';
+  let mChk=0;
+  for(let i=1;i<=n;i++){const k=y+'-'+pad(m)+'-'+pad(i);const dd=st.days[k];const kc=dd?totals(k).kcal:0;
+    const cls=['d'];if(dd&&dd.checkin){cls.push('chk');mChk++}if(kc>g)cls.push('over');if(dd&&(dd.items||[]).length)cls.push('has');if(k===t)cls.push('today');if(k>t)cls.push('fut');
+    cells+=`<button class="${cls.join(' ')}" ${k>t?'disabled':''} data-act="goDay" data-d="${k}">${i}${kc?`<small>${r0(kc)}</small>`:''}</button>`}
+  const thisM=t.slice(0,7)===st.calMonth;
+  return `
+  <section class="card stats3"><div><b class="g">${streak()}</b><span>当前连续</span></div><div><b>${bestStreak()}</b><span>最长连续</span></div><div><b>${total}</b><span>累计打卡</span></div></section>
+  <section class="card">
+    <div class="calh"><button data-act="mPrev">‹</button><b>${y}年${m}月 · 打卡 ${mChk} 天</b><button data-act="mNext" ${thisM?'disabled style="opacity:.25"':''}>›</button></div>
+    <div class="cal">${cells}</div>
+    <div class="legend"><span><i style="background:var(--green)"></i>已打卡</span><span><i style="background:var(--orange)"></i>打卡但超目标</span><span><i style="background:var(--green-l)"></i>有记录未打卡</span></div>
+    <p class="note" style="margin:10px 0 0">点日期可查看或补记当天饮食。格子里的小数字是当天热量。</p>
+  </section>`;
+}
+
+function vTrend(){
+  const g=goal(),t=TODAY();
+  const days7=[...Array(7)].map((_,i)=>addDays(t,i-6));
+  const vals=days7.map(d=>totals(d).kcal);
+  const logged=vals.filter(v=>v>0);const avg=logged.length?logged.reduce((a,b)=>a+b,0)/logged.length:0;
+  const W=320,H=150,top=14,bot=24,max=Math.max(g*1.25,...vals),bw=26,sx=(W-20)/7;
+  const yv=v=>top+(H-top-bot)*(1-v/max);
+  let bars=days7.map((d,i)=>{const v=vals[i],x=10+sx*i+(sx-bw)/2;const h=(H-top-bot)*(v/max);
+    return `<rect x="${x}" y="${H-bot-h}" width="${bw}" height="${Math.max(h,0)}" rx="6" fill="${v>g?'var(--orange)':'var(--green)'}" opacity="${v?1:0}"/>
+    ${v?`<text x="${x+bw/2}" y="${H-bot-h-4}" font-size="9" text-anchor="middle" fill="#7C766C">${r0(v)}</text>`:''}
+    <text x="${x+bw/2}" y="${H-8}" font-size="11" text-anchor="middle" fill="${d===t?'#24211C':'#7C766C'}" font-weight="${d===t?700:400}">${d===t?'今':WD[pd(d).getDay()]}</text>`}).join('');
+  const gl=`<line x1="6" x2="${W-6}" y1="${yv(g)}" y2="${yv(g)}" stroke="#24211C" stroke-dasharray="4 4" opacity=".35"/><text x="${W-6}" y="${yv(g)-4}" font-size="10" text-anchor="end" fill="#7C766C">目标 ${g}</text>`;
+  // 体重
+  const ws=Object.keys(st.days).filter(k=>st.days[k].weight).sort().slice(-30).map(k=>[k,+st.days[k].weight]);
+  let wchart='<p class="empty">还没有体重记录。</p>';
+  if(ws.length){const mn=Math.min(...ws.map(w=>w[1]))-1,mx=Math.max(...ws.map(w=>w[1]))+1,WW=320,HH=120;
+    const pt=(w,i)=>[ws.length===1?WW/2:16+(WW-32)*i/(ws.length-1),12+(HH-36)*(1-(w[1]-mn)/(mx-mn))];
+    const pts=ws.map(pt);
+    wchart=`<svg viewBox="0 0 ${WW} ${HH}" width="100%"><polyline fill="none" stroke="var(--p)" stroke-width="2.5" stroke-linejoin="round" points="${pts.map(p=>p.join(',')).join(' ')}"/>
+      ${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="${i===pts.length-1?4.5:2.5}" fill="var(--p)"/>`).join('')}
+      <text x="${pts[pts.length-1][0]}" y="${pts[pts.length-1][1]-9}" font-size="11" text-anchor="${pts.length>1?'end':'middle'}" fill="#24211C" font-weight="700">${ws[ws.length-1][1]} kg</text>
+      <text x="16" y="${HH-6}" font-size="10" fill="#7C766C">${ws[0][0].slice(5).replace('-','/')}</text><text x="${WW-16}" y="${HH-6}" font-size="10" text-anchor="end" fill="#7C766C">${ws[ws.length-1][0].slice(5).replace('-','/')}</text></svg>
+      ${ws.length>1?`<p class="note" style="margin:4px 0 0">较首次记录 ${(ws[ws.length-1][1]-ws[0][1]>0?'+':'')+r1(ws[ws.length-1][1]-ws[0][1])} kg</p>`:''}`}
+  return `
+  <section class="card stats3"><div><b>${r0(avg)}</b><span>近7天日均</span></div><div><b class="g">${days7.filter(d=>{const v=totals(d).kcal;return v>0&&v<=g}).length}</b><span>达标天数</span></div><div><b>${days7.filter(d=>day(d).checkin).length}/7</b><span>本周打卡</span></div></section>
+  <div class="sec-t">近 7 天热量</div>
+  <section class="card"><svg viewBox="0 0 ${W} ${H}" width="100%">${gl}${bars}</svg></section>
+  <div class="sec-t" style="display:flex;justify-content:space-between;align-items:center">体重变化<button class="btn ghost" style="padding:5px 12px;font-size:13px" data-act="weight">记录今日体重</button></div>
+  <section class="card">${wchart}</section>`;
+}
+
+function vMe(){
+  const s=st.settings,mg=macroGoal(),p=s.profile;
+  const c=st.aiCfg;const n=Object.keys(st.days).length;
+  return `
+  <section class="card">
+    <div class="row"><span>每日热量目标</span><b>${goal()} 千卡</b></div>
+    <div class="row"><span>蛋白质 / 碳水 / 脂肪</span><b>${r0(mg.p)} / ${r0(mg.c)} / ${r0(mg.f)} g</b></div>
+    ${p?`<div class="row"><span>身体数据</span><b>${p.sex==='m'?'男':'女'} · ${p.age}岁 · ${p.h}cm · ${p.w}kg</b></div>`:''}
+    <button class="btn block" style="margin-top:10px" data-act="goal">设置目标</button>
+  </section>
+  <section class="card">
+    <div class="row"><span>AI 识别</span><b>${aiReady()?esc((PRESETS[c.preset]||PRESETS.custom).name)+' · '+esc(c.model):'未设置'}</b></div>
+    <button class="btn ${aiReady()?'ghost':''} block" style="margin-top:10px" data-act="aiSet">${aiReady()?'修改 AI 设置':'设置 AI 识别'}</button></section>
+  <section class="card"><b>数据与备份</b>
+    <p class="note">所有记录只保存在这台设备的这个浏览器里（已记录 ${n} 天），不会上传到任何服务器。清除浏览器数据或换手机前，请先导出备份。</p>
+    <div class="g2"><button class="btn block" data-act="export">导出备份</button><label class="btn ghost block" style="text-align:center;cursor:pointer">导入备份<input type="file" accept=".json,application/json" data-import hidden></label></div>
+    <p class="note" style="margin-bottom:0">AI 估算的份量和热量只是参考，可以在加入前手动修改。</p></section>`;
+}
+
+/* ---------- 弹层 ---------- */
+function openSheet(html){$('#sheet').innerHTML=html;$('#sw').classList.add('open');document.body.style.overflow='hidden'}
+function closeSheet(){$('#sw').classList.remove('open');document.body.style.overflow='';st.ai=null}
+const mealChips=sel=>`<div class="chips">${MEALS.map(([k,n])=>`<button class="chip ${k===sel?'on':''}" data-act="setMeal" data-m="${k}">${n}</button>`).join('')}</div>`;
+
+function openAdd(meal,tab){st.addMeal=meal||defaultMeal();st.addTab=tab||'photo';openSheet(addHtml())}
+function addHtml(){
+  let body='';const needAI=`<p class="note">拍照识别和文字估算需要先接入一个 AI 服务（推荐智谱，免费），只需设置一次。</p><div class="g2"><button class="btn block" data-act="aiSet">去设置 AI</button><button class="btn ghost block" data-act="addTab" data-k="manual">先手动输入</button></div>`;
+  if(st.addTab==='photo'){
+    if(!aiReady())body=needAI;
+    else body=`<div class="big2">
+      <label class="bigbtn"><input type="file" accept="image/*" capture="environment" data-file><span class="e">📷</span>拍照</label>
+      <label class="bigbtn alt"><input type="file" accept="image/*" data-file><span class="e">🖼️</span>从相册选</label></div>
+      <label class="fld" style="margin-top:12px"><span>补充说明（可选，让估算更准）</span><input id="hint" placeholder="如：饭只吃了一半、少油、350ml 杯"></label>`;
+  }else if(st.addTab==='text'){
+    body=aiReady()?`<label class="fld"><span>吃了什么？越具体越准</span><textarea id="desc" rows="3" placeholder="例：一碗牛肉面（中碗），加一个卤蛋，一杯无糖豆浆"></textarea></label>
+      <button class="btn block" data-act="textAI">✨ AI 估算热量</button>`
+      :needAI;
+  }else{
+    body=`<label class="fld"><span>食物名称 *</span><input id="m_name" placeholder="例：鸡胸肉沙拉"></label>
+      <div class="g2"><label class="fld"><span>热量 (千卡) *</span><input id="m_kcal" type="number" inputmode="decimal"></label>
+      <label class="fld"><span>重量 (g)</span><input id="m_g" type="number" inputmode="decimal"></label></div>
+      <div class="g3"><label class="fld"><span>蛋白质 g</span><input id="m_p" type="number" inputmode="decimal"></label>
+      <label class="fld"><span>碳水 g</span><input id="m_c" type="number" inputmode="decimal"></label>
+      <label class="fld"><span>脂肪 g</span><input id="m_f" type="number" inputmode="decimal"></label></div>
+      <button class="btn block" data-act="manualSave">保存</button>`;
+  }
+  return `<div class="sh-h"><b>记录饮食</b><span class="note">${st.date===TODAY()?'':dateLabel(st.date)}</span><button class="x" data-act="close">×</button></div>
+  ${mealChips(st.addMeal)}
+  <div class="seg">${[['photo','📷 拍照识别'],['text','✍️ 文字估算'],['manual','✏️ 手动输入']].map(([k,l])=>`<button data-act="addTab" data-k="${k}" class="${st.addTab===k?'on':''}">${l}</button>`).join('')}</div>
+  <div>${body}</div>`;
+}
+
+function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file);const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('图片无法读取'));i.src=u})}
+function resize(img,max,q){const s=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement('canvas');
+  c.width=Math.round(img.naturalWidth*s);c.height=Math.round(img.naturalHeight*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  return c.toDataURL('image/jpeg',q)}
+function thumbOf(img){const S=112,c=document.createElement('canvas');c.width=c.height=S;const w=img.naturalWidth,h=img.naturalHeight,m=Math.min(w,h);
+  c.getContext('2d').drawImage(img,(w-m)/2,(h-m)/2,m,m,0,0,S,S);return c.toDataURL('image/jpeg',.6)}
+
+const PROMPT=(isImg,extra)=>`你是专业营养师。${isImg?'请识别这张照片里的所有食物和饮品':'请根据用户的文字描述'}，估算每一项的可食用分量(克)和营养成分。
+${extra?`用户说明：${extra}\n`:''}按常见中国家庭/餐馆的份量合理估算，同一道菜不要拆得过细。
+只输出一个 JSON 对象，不要任何其他文字或代码块标记，格式：
+{"items":[{"name":"中文食物名","grams":150,"kcal":174,"protein":3.9,"carbs":38.1,"fat":0.4}],"note":"一句简短的中文饮食点评或建议，30字以内"}
+如果${isImg?'照片里没有食物':'描述里没有食物'}，items 为空数组，note 说明原因。`;
+
+async function runAI(blob,extra,thumb,preview){
+  st.ai={loading:true,thumb,meal:st.addMeal};
+  openSheet(`<div class="sh-h"><b>AI 识别中</b><button class="x" data-act="close">×</button></div>
+    <div class="loading">${preview?`<img src="${preview}" alt="">`:''}<div class="spin"></div><span class="note">正在分析食物和份量，约需 10 秒…</span></div>`);
+  const token=st.ai;
+  try{
+    const out=await callAI(PROMPT(!!blob,extra),blob);
+    if(st.ai!==token)return;
+    const m=(out||'').match(/\{[\s\S]*\}/);if(!m)throw new Error('没有得到有效结果');
+    const o=JSON.parse(m[0]);
+    const items=(Array.isArray(o.items)?o.items:[]).map(x=>{const b={name:String(x.name||'食物'),grams:+x.grams||0,kcal:+x.kcal||0,p:+x.protein||0,c:+x.carbs||0,f:+x.fat||0};return{...b,base:{...b},on:true}});
+    st.ai={items,thumb,note:String(o.note||''),meal:token.meal};
+    openSheet(resultHtml());
+  }catch(e){
+    if(st.ai!==token)return;
+    const msg='识别失败：'+(e&&e.message||'请重试');
+    st.ai=null;
+    openSheet(`<div class="sh-h"><b>没能完成识别</b><button class="x" data-act="close">×</button></div><p class="note">${esc(msg)}</p>
+      <div class="g2"><button class="btn ghost block" data-act="reAdd" data-k="photo">重新拍照</button><button class="btn block" data-act="reAdd" data-k="manual">手动输入</button></div>`);
+  }
+}
+function aiTotal(){return st.ai.items.filter(i=>i.on).reduce((a,i)=>a+i.kcal,0)}
+function resultHtml(){
+  const a=st.ai;
+  return `<div class="sh-h"><b>识别结果</b><button class="x" data-act="close">×</button></div>
+  <div class="ai-top">${a.thumb?`<img src="${a.thumb}" alt="">`:''}<div class="ai-note">${a.note?'💡 '+esc(a.note):'可以修改名称和重量，热量会按比例自动调整。'}</div></div>
+  ${a.items.length?`<div>${a.items.map((it,i)=>`<div class="ar ${it.on?'':'off'}" data-row="${i}">
+    <input type="checkbox" ${it.on?'checked':''} data-i="${i}" data-f="on">
+    <input class="inp" value="${esc(it.name)}" data-i="${i}" data-f="name">
+    <div class="g"><input class="inp" type="number" inputmode="decimal" value="${r0(it.grams)}" data-i="${i}" data-f="grams"><i>g</i></div>
+    <div class="kc" data-kc="${i}">${r0(it.kcal)}<small>蛋${r1(it.p)} 碳${r1(it.c)} 脂${r1(it.f)}</small></div></div>`).join('')}</div>`
+    :`<p class="note">没认出食物，换个角度再拍一张，或改用手动输入。</p>`}
+  <div class="tot"><span>合计</span><b id="aiTot">${r0(aiTotal())} 千卡</b></div>
+  <div class="note" style="margin-bottom:6px">加入到</div>${mealChips(a.meal)}
+  <button class="btn block" style="margin-top:14px" data-act="aiSave" ${a.items.length?'':'disabled'}>加入记录</button>`;
+}
+
+function goalHtml(){
+  const p=st.settings.profile||{sex:'f',age:28,h:163,w:58,act:1.375,aim:-400};
+  const opt=(v,cur,l)=>`<option value="${v}" ${+v===+cur||v===cur?'selected':''}>${l}</option>`;
+  return `<div class="sh-h"><b>设置目标</b><button class="x" data-act="close">×</button></div>
+  <form id="gf" onsubmit="return false">
+  <div class="g2"><label class="fld"><span>性别</span><select name="sex">${opt('f',p.sex,'女')}${opt('m',p.sex,'男')}</select></label>
+  <label class="fld"><span>年龄</span><input name="age" type="number" value="${p.age}"></label></div>
+  <div class="g2"><label class="fld"><span>身高 cm</span><input name="h" type="number" value="${p.h}"></label>
+  <label class="fld"><span>体重 kg</span><input name="w" type="number" step="0.1" value="${p.w}"></label></div>
+  <label class="fld"><span>日常活动量</span><select name="act">${opt(1.2,p.act,'久坐（基本不运动）')}${opt(1.375,p.act,'轻度（每周运动 1–3 次）')}${opt(1.55,p.act,'中度（每周运动 3–5 次）')}${opt(1.725,p.act,'高强度（几乎每天运动）')}</select></label>
+  <label class="fld"><span>目标</span><select name="aim">${opt(-500,p.aim,'减脂（较快）')}${opt(-400,p.aim,'减脂（温和）')}${opt(0,p.aim,'保持体重')}${opt(300,p.aim,'增肌')}</select></label>
+  <div class="card" style="background:var(--green-l);margin:4px 0 12px"><span class="note">推荐每日摄入</span><div style="display:flex;align-items:center;justify-content:space-between"><b id="rec" style="font-size:24px;color:var(--green)">—</b><button class="btn" data-act="useRec">用这个</button></div><span class="note" id="tdee"></span></div>
+  <label class="fld"><span>每日热量目标（千卡）</span><input name="goal" type="number" value="${goal()}"></label>
+  <button class="btn block" data-act="saveGoal">保存</button></form>`;
+}
+function calcRec(){const f=$('#gf');if(!f)return 0;const v=n=>+f.elements[n].value;
+  const bmr=10*v('w')+6.25*v('h')-5*v('age')+(f.elements.sex.value==='m'?5:-161);
+  const tdee=bmr*v('act');let rec=Math.round((tdee+v('aim'))/10)*10;const floor=f.elements.sex.value==='m'?1500:1200;rec=Math.max(rec,floor);
+  if(!(rec>0)||!isFinite(rec)){$('#rec').textContent='—';return 0}
+  $('#rec').textContent=rec+' 千卡';$('#tdee').textContent=`基础代谢约 ${r0(bmr)}，每日消耗约 ${r0(tdee)} 千卡`;return rec}
+
+function aiHtml(){
+  const c=st.aiCfg||{preset:'zhipu',...PRESETS.zhipu,key:''};const k=c.preset||'custom';const p=PRESETS[k]||PRESETS.custom;
+  return `<div class="sh-h"><b>设置 AI 识别</b><button class="x" data-act="close">×</button></div>
+  <p class="note" style="margin-top:0">选一个 AI 服务，填上你自己的 API Key。推荐智谱 GLM-4V-Flash：免费、国内直连、能看图。</p>
+  <div class="chips" style="margin-bottom:12px">${Object.entries(PRESETS).map(([kk,v])=>`<button class="chip ${kk===k?'on':''}" data-act="preset" data-k="${kk}">${v.name}</button>`).join('')}</div>
+  <form id="af" data-preset="${k}" onsubmit="return false">
+  <label class="fld"><span>API Key</span><input name="key" type="password" autocomplete="off" value="${esc(c.key||'')}" placeholder="粘贴你的 API Key"></label>
+  <p class="note" id="keyLink" style="margin:-4px 0 10px;word-break:break-all">${p.url?`在这里获取 API Key：<a href="${p.url}" target="_blank" rel="noopener">${p.url}</a>`:''}</p>
+  <label class="fld"><span>接口地址</span><input name="base" value="${esc(c.base||'')}" placeholder="https://.../v1"></label>
+  <label class="fld"><span>模型名称（需支持识图）</span><input name="model" value="${esc(c.model||'')}" placeholder="例：glm-4v-flash"></label>
+  <p class="note" id="testRes" style="min-height:1.6em"></p>
+  <div class="g2"><button class="btn ghost block" data-act="aiCfgTest">测试连接</button><button class="btn block" data-act="aiCfgSave">保存</button></div>
+  <p class="note">Key 只保存在你这台设备上，识别时由手机直接发给你选的 AI 服务。</p></form>`;
+}
+
+function weightHtml(){const w=day(TODAY()).weight||'';
+  return `<div class="sh-h"><b>记录今日体重</b><button class="x" data-act="close">×</button></div>
+  <label class="fld"><span>体重 (kg)</span><input id="wt" type="number" step="0.1" inputmode="decimal" value="${w}" placeholder="例：58.5"></label>
+  <button class="btn block" data-act="saveWeight">保存</button>`}
+
+/* ---------- 事件 ---------- */
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2400)}
+
+document.addEventListener('click',e=>{
+  const tab=e.target.closest('[data-tab]');
+  if(tab){st.tab=tab.dataset.tab;if(st.tab==='today'&&st.date>TODAY())st.date=TODAY();render();scrollTo(0,0);return}
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const a=b.dataset.act;
+  switch(a){
+    case 'prev':st.date=addDays(st.date,-1);render();break;
+    case 'next':if(st.date<TODAY()){st.date=addDays(st.date,1);render()}break;
+    case 'goToday':st.date=TODAY();render();break;
+    case 'add':openAdd(b.dataset.meal,'photo');break;
+    case 'quickPhoto':if(st.tab!=='today'){st.tab='today';render()}openAdd(st.date===TODAY()?defaultMeal():'lunch','photo');break;
+    case 'close':closeSheet();break;
+    case 'addTab':st.addTab=b.dataset.k;openSheet(addHtml());break;
+    case 'reAdd':openAdd(st.addMeal,b.dataset.k);break;
+    case 'setMeal':
+      if(st.ai)st.ai.meal=b.dataset.m;else st.addMeal=b.dataset.m;
+      b.parentElement.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===b));break;
+    case 'del':{const id=b.dataset.id;mutDay(st.date,d=>d.items=d.items.filter(i=>i.id!==id));toast('已删除');break}
+    case 'checkin':mutDay(st.date,d=>d.checkin=true);toast(st.date===TODAY()?`打卡成功！已连续 ${streak()} 天 🎉`:'补卡成功');break;
+    case 'uncheck':mutDay(st.date,d=>d.checkin=false);break;
+    case 'goDay':st.date=b.dataset.d;st.tab='today';render();scrollTo(0,0);break;
+    case 'mPrev':case 'mNext':{const[y,m]=st.calMonth.split('-').map(Number);const d=new Date(y,m-1+(a==='mPrev'?-1:1),1);st.calMonth=d.getFullYear()+'-'+pad(d.getMonth()+1);render();break}
+    case 'manualSave':{
+      const name=$('#m_name').value.trim(),kcal=+$('#m_kcal').value;
+      if(!name||!(kcal>=0)||$('#m_kcal').value===''){toast('请填写名称和热量');break}
+      const it={id:nid(),meal:st.addMeal,name,kcal,grams:+$('#m_g').value||0,p:+$('#m_p').value||0,c:+$('#m_c').value||0,f:+$('#m_f').value||0,src:'manual',t:Date.now()};
+      closeSheet();mutDay(st.date,d=>d.items.push(it));toast('已记录 '+name);break}
+    case 'textAI':{const t=$('#desc').value.trim();if(!t){toast('先描述一下吃了什么');break}runAI(null,t,null,null);break}
+    case 'aiSave':{
+      const a2=st.ai;const its=a2.items.filter(i=>i.on&&i.name.trim());if(!its.length){toast('至少选择一项');break}
+      const now=Date.now();
+      const add=its.map((i,k)=>({id:nid(),meal:a2.meal,name:i.name.trim(),grams:r0(i.grams),kcal:r0(i.kcal),p:r1(i.p),c:r1(i.c),f:r1(i.f),src:'ai',t:now,...(k===0&&a2.thumb?{thumb:a2.thumb}:{})}));
+      const sum=add.reduce((s,i)=>s+i.kcal,0);
+      closeSheet();mutDay(st.date,d=>d.items.push(...add));toast(`已加入${MEAL_NAME[a2.meal]} · ${sum} 千卡`);break}
+    case 'goal':openSheet(goalHtml());calcRec();break;
+    case 'useRec':{const r=calcRec();if(r)$('#gf').elements.goal.value=r;break}
+    case 'saveGoal':{const f=$('#gf'),v=n=>f.elements[n].value;const g=+v('goal');
+      if(!(g>=800&&g<=6000)){toast('目标请设在 800–6000 千卡之间');break}
+      st.settings={...st.settings,goal:Math.round(g),profile:{sex:v('sex'),age:+v('age'),h:+v('h'),w:+v('w'),act:+v('act'),aim:+v('aim')}};
+      persistSettings();closeSheet();render();toast('目标已更新');break}
+    case 'weight':openSheet(weightHtml());break;
+    case 'saveWeight':{const w=+$('#wt').value;if(!(w>20&&w<400)){toast('请输入有效体重');break}
+      closeSheet();mutDay(TODAY(),d=>d.weight=r1(w));toast('体重已记录');break}
+    case 'export':{const txt=JSON.stringify({app:'shike',v:1,exported:new Date().toISOString(),settings:st.settings,days:st.days});
+      const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download='shike-backup-'+TODAY()+'.json';document.body.appendChild(a);a.click();a.remove();toast('备份已导出');break}
+    case 'aiSet':openSheet(aiHtml());break;
+    case 'preset':{const k=b.dataset.k,p=PRESETS[k],f=$('#af');f.dataset.preset=k;f.elements.base.value=p.base;f.elements.model.value=p.model;
+      b.parentElement.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));$('#keyLink').innerHTML=p.url?`在这里获取 API Key：<a href="${p.url}" target="_blank" rel="noopener">${p.url}</a>`:'';break}
+    case 'aiCfgSave':case 'aiCfgTest':{const f=$('#af');const cfg={preset:f.dataset.preset,base:f.elements.base.value.trim(),model:f.elements.model.value.trim(),key:f.elements.key.value.trim()};
+      if(!cfg.base||!cfg.model||!cfg.key){toast('请把三项都填好');break}
+      if(a==='aiCfgSave'){st.aiCfg=cfg;saveAI();closeSheet();render();toast('AI 设置已保存');break}
+      const old=st.aiCfg;st.aiCfg=cfg;b.disabled=true;b.textContent='测试中…';const r=$('#testRes');r.textContent='';
+      callAI('回复两个字：可以').then(t=>{r.style.color='var(--green)';r.textContent='✅ 连接成功：'+t.slice(0,30)}).catch(err=>{r.style.color='var(--orange)';r.textContent='❌ '+err.message})
+        .finally(()=>{st.aiCfg=old;b.disabled=false;b.textContent='测试连接'});break}
+  }
+});
+
+document.addEventListener('change',async e=>{
+  const el=e.target;
+  if(el.matches('[data-import]')&&el.files&&el.files[0]){
+    try{const o=JSON.parse(await el.files[0].text());if(!o||typeof o.days!=='object')throw 0;
+      const n=Object.keys(o.days).length;
+      st.days={...st.days,...o.days};if(o.settings)st.settings=o.settings;saveLocal();render();toast(`已导入 ${n} 天的记录`)}
+    catch(err){toast('这不是有效的备份文件')}
+    el.value='';return}
+  if(el.matches('[data-file]')&&el.files&&el.files[0]){
+    const file=el.files[0];const extra=($('#hint')||{}).value||'';
+    try{const img=await loadImg(file);const blob=resize(img,1024,.8);const th=thumbOf(img);
+      runAI(blob,extra.trim(),th,blob)}
+    catch(err){toast('图片读取失败，换一张试试')}
+  }
+  if(el.matches('[data-f="on"]')){const i=+el.dataset.i;st.ai.items[i].on=el.checked;el.closest('.ar').classList.toggle('off',!el.checked);$('#aiTot').textContent=r0(aiTotal())+' 千卡'}
+});
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(el.closest('#gf'))calcRec();
+  if(st.ai&&st.ai.items&&el.dataset.f){const i=+el.dataset.i,it=st.ai.items[i];
+    if(el.dataset.f==='name')it.name=el.value;
+    if(el.dataset.f==='grams'){const g=+el.value||0,b=it.base,k=b.grams>0?g/b.grams:1;
+      Object.assign(it,{grams:g,kcal:b.kcal*k,p:b.p*k,c:b.c*k,f:b.f*k});
+      const kc=document.querySelector(`[data-kc="${i}"]`);kc.innerHTML=`${r0(it.kcal)}<small>蛋${r1(it.p)} 碳${r1(it.c)} 脂${r1(it.f)}</small>`;
+      $('#aiTot').textContent=r0(aiTotal())+' 千卡'}}
+});
+
+init();
+</script>
+</body>
+</html>
