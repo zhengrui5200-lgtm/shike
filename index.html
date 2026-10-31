@@ -234,7 +234,7 @@ async function callAI(prompt,imgDataUrl){
   finally{clearTimeout(to)}
   const txt=await res.text();let j=null;try{j=JSON.parse(txt)}catch(e){}
   if(!res.ok){const m=j&&(j.error&&(j.error.message||j.error.code)||j.message);
-    throw new Error((res.status===401||res.status===403?'API Key 无效或没有权限':'AI 服务返回错误 '+res.status)+(m?'：'+m:''))}
+    throw new Error((res.status===401||res.status===403?'API Key 不正确（请重新复制完整的 Key）':'AI 服务返回错误 '+res.status)+(m?'：'+m:''))}
   const out=j&&j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;
   if(!out)throw new Error('AI 没有返回内容');
   return typeof out==='string'?out:out.map(x=>x.text||'').join('');
@@ -464,7 +464,7 @@ function aiHtml(){
   <p class="note" style="margin-top:0">选一个 AI 服务，填上你自己的 API Key。推荐智谱 GLM-4V-Flash：免费、国内直连、能看图。</p>
   <div class="chips" style="margin-bottom:12px">${Object.entries(PRESETS).map(([kk,v])=>`<button class="chip ${kk===k?'on':''}" data-act="preset" data-k="${kk}">${v.name}</button>`).join('')}</div>
   <form id="af" data-preset="${k}" onsubmit="return false">
-  <label class="fld"><span>API Key</span><input name="key" type="password" autocomplete="off" value="${esc(c.key||'')}" placeholder="粘贴你的 API Key"></label>
+  <label class="fld"><span style="display:flex;justify-content:space-between">API Key<button type="button" class="link" data-act="eye">显示</button></span><input name="key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(c.key||'')}" placeholder="粘贴你的 API Key"></label>
   <p class="note" id="keyLink" style="margin:-4px 0 10px;word-break:break-all">${p.url?`在这里获取 API Key：<a href="${p.url}" target="_blank" rel="noopener">${p.url}</a>`:''}</p>
   <label class="fld"><span>接口地址</span><input name="base" value="${esc(c.base||'')}" placeholder="https://.../v1"></label>
   <label class="fld"><span>模型名称（需支持识图）</span><input name="model" value="${esc(c.model||'')}" placeholder="例：glm-4v-flash"></label>
@@ -527,9 +527,10 @@ document.addEventListener('click',e=>{
     case 'export':{const txt=JSON.stringify({app:'shike',v:1,exported:new Date().toISOString(),settings:st.settings,days:st.days});
       const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));a.download='shike-backup-'+TODAY()+'.json';document.body.appendChild(a);a.click();a.remove();toast('备份已导出');break}
     case 'aiSet':openSheet(aiHtml());break;
+    case 'eye':{e.preventDefault();const k=$('#af').elements.key;const show=k.type==='password';k.type=show?'text':'password';b.textContent=show?'隐藏':'显示';break}
     case 'preset':{const k=b.dataset.k,p=PRESETS[k],f=$('#af');f.dataset.preset=k;f.elements.base.value=p.base;f.elements.model.value=p.model;
       b.parentElement.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===b));$('#keyLink').innerHTML=p.url?`在这里获取 API Key：<a href="${p.url}" target="_blank" rel="noopener">${p.url}</a>`:'';break}
-    case 'aiCfgSave':case 'aiCfgTest':{const f=$('#af');const cfg={preset:f.dataset.preset,base:f.elements.base.value.trim(),model:f.elements.model.value.trim(),key:f.elements.key.value.trim()};
+    case 'aiCfgSave':case 'aiCfgTest':{const f=$('#af');const cfg={preset:f.dataset.preset,base:f.elements.base.value.trim(),model:f.elements.model.value.trim(),key:f.elements.key.value.replace(/\s+/g,'')};f.elements.key.value=cfg.key;
       if(!cfg.base||!cfg.model||!cfg.key){toast('请把三项都填好');break}
       if(a==='aiCfgSave'){st.aiCfg=cfg;saveAI();closeSheet();render();toast('AI 设置已保存');break}
       const old=st.aiCfg;st.aiCfg=cfg;b.disabled=true;b.textContent='测试中…';const r=$('#testRes');r.textContent='';
