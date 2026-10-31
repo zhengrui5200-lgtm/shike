@@ -208,12 +208,12 @@ function loadLocal(){try{const o=JSON.parse(localStorage.getItem(LS)||'{}');st.d
 function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({days:st.days,settings:st.settings}))}catch(e){toast('保存失败：存储空间不足，请先导出备份')}}
 const persistDay=()=>saveLocal(), persistSettings=()=>saveLocal();
 function mutDay(d,fn){const cur=clone(day(d));cur.items=cur.items||[];fn(cur);st.days[d]=cur;persistDay(d);render()}
-function loadAI(){try{st.aiCfg=JSON.parse(localStorage.getItem(LS_AI)||'null')}catch(e){}}
+function loadAI(){try{st.aiCfg=JSON.parse(localStorage.getItem(LS_AI)||'null');if(st.aiCfg&&st.aiCfg.model==='glm-4v-flash'){st.aiCfg.model='glm-4.6v-flash';saveAI()}}catch(e){}}
 function saveAI(){try{localStorage.setItem(LS_AI,JSON.stringify(st.aiCfg))}catch(e){}}
 const aiReady=()=>!!(st.aiCfg&&st.aiCfg.key&&st.aiCfg.base&&st.aiCfg.model);
 
 const PRESETS={
-  zhipu:{name:'智谱 GLM（免费）',base:'https://open.bigmodel.cn/api/paas/v4',model:'glm-4v-flash',raw:true,url:'https://open.bigmodel.cn/usercenter/apikeys'},
+  zhipu:{name:'智谱 GLM（免费）',base:'https://open.bigmodel.cn/api/paas/v4',model:'glm-4.6v-flash',raw:true,extra:{thinking:{type:'disabled'}},url:'https://open.bigmodel.cn/usercenter/apikeys'},
   qwen:{name:'通义千问',base:'https://dashscope.aliyuncs.com/compatible-mode/v1',model:'qwen-vl-max',url:'https://bailian.console.aliyun.com/'},
   doubao:{name:'豆包（火山方舟）',base:'https://ark.cn-beijing.volces.com/api/v3',model:'',url:'https://console.volcengine.com/ark'},
   openai:{name:'OpenAI',base:'https://api.openai.com/v1',model:'gpt-4o-mini',url:'https://platform.openai.com/api-keys'},
@@ -229,7 +229,7 @@ async function callAI(prompt,imgDataUrl){
   let res;
   try{res=await fetch(base+'/chat/completions',{method:'POST',signal:ctl.signal,
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+c.key},
-    body:JSON.stringify({model:c.model,messages:[{role:'user',content}],temperature:0.2})})}
+    body:JSON.stringify({model:c.model,messages:[{role:'user',content}],temperature:0.2,...((PRESETS[c.preset]||{}).extra||{})})})}
   catch(e){throw new Error(e.name==='AbortError'?'请求超时，请检查网络':'无法连接到 AI 服务（网络不通，或该服务不允许网页直接调用）')}
   finally{clearTimeout(to)}
   const txt=await res.text();let j=null;try{j=JSON.parse(txt)}catch(e){}
@@ -461,13 +461,13 @@ function calcRec(){const f=$('#gf');if(!f)return 0;const v=n=>+f.elements[n].val
 function aiHtml(){
   const c=st.aiCfg||{preset:'zhipu',...PRESETS.zhipu,key:''};const k=c.preset||'custom';const p=PRESETS[k]||PRESETS.custom;
   return `<div class="sh-h"><b>设置 AI 识别</b><button class="x" data-act="close">×</button></div>
-  <p class="note" style="margin-top:0">选一个 AI 服务，填上你自己的 API Key。推荐智谱 GLM-4V-Flash：免费、国内直连、能看图。</p>
+  <p class="note" style="margin-top:0">选一个 AI 服务，填上你自己的 API Key。推荐智谱 GLM-4.6V-Flash：免费、国内直连、能看图。</p>
   <div class="chips" style="margin-bottom:12px">${Object.entries(PRESETS).map(([kk,v])=>`<button class="chip ${kk===k?'on':''}" data-act="preset" data-k="${kk}">${v.name}</button>`).join('')}</div>
   <form id="af" data-preset="${k}" onsubmit="return false">
   <label class="fld"><span style="display:flex;justify-content:space-between">API Key<button type="button" class="link" data-act="eye">显示</button></span><input name="key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(c.key||'')}" placeholder="粘贴你的 API Key"></label>
   <p class="note" id="keyLink" style="margin:-4px 0 10px;word-break:break-all">${p.url?`在这里获取 API Key：<a href="${p.url}" target="_blank" rel="noopener">${p.url}</a>`:''}</p>
   <label class="fld"><span>接口地址</span><input name="base" value="${esc(c.base||'')}" placeholder="https://.../v1"></label>
-  <label class="fld"><span>模型名称（需支持识图）</span><input name="model" value="${esc(c.model||'')}" placeholder="例：glm-4v-flash"></label>
+  <label class="fld"><span>模型名称（需支持识图）</span><input name="model" value="${esc(c.model||'')}" placeholder="例：glm-4.6v-flash"></label>
   <p class="note" id="testRes" style="min-height:1.6em"></p>
   <div class="g2"><button class="btn ghost block" data-act="aiCfgTest">测试连接</button><button class="btn block" data-act="aiCfgSave">保存</button></div>
   <p class="note">Key 只保存在你这台设备上，识别时由手机直接发给你选的 AI 服务。</p></form>`;
